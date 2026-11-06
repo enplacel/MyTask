@@ -1,15 +1,5 @@
 import streamlit as st
-from utils.sheets import cari_siswa
-
-# ─────────────────────────────────────────────
-# Palet J+ — Midnight Navy + Teal, dengan highlight gradient
-#   Background  #0B1020   Surface  #131A2E   Sidebar #0E1426
-#   Primary     #2DD4BF   Sky #38BDF8   Violet #A78BFA   Pink #F472B6
-#   Hero        #0F766E → #1D4ED8 → #6D28D9  (teks putih)
-#   Teks        #E6EAF5   Teks muted #8B95B0
-#   Border      #243049
-#   Sukses #34D399 · Peringatan #FBBF24 · Bahaya #F87171
-# ─────────────────────────────────────────────
+from utils.sheets import verifikasi_login
 
 GLOBAL_CSS = """
 <style>
@@ -439,7 +429,7 @@ div[data-testid="stButton"] > button:active {
 .login-header {
     background-size: 200% 200% !important;
     animation: fadeUp 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) backwards,
-               gradShift 14s ease-in-out infinite;
+            gradShift 14s ease-in-out infinite;
 }
 .login-header::before { animation: floaty 7s ease-in-out infinite; }
 .login-header::after  { animation: floaty 9s ease-in-out infinite reverse; }
@@ -479,6 +469,9 @@ def require_login():
             index=None,
             placeholder="Pilih akun kamu..."
         )
+        npm_input = ""
+        if akun == "Murid":
+            npm_input = st.text_input("NPM", placeholder="Masukkan NPM kamu...")
 
         password = st.text_input(
             "Password",
@@ -486,7 +479,7 @@ def require_login():
             placeholder="Masukkan password kamu..."
         )
 
-        if st.button("Masuk", use_container_width=True):
+        if st.button("Masuk", width="stretch"):
             if not akun:
                 st.error("Pilih akun dulu ya!")
             elif not password:
@@ -501,9 +494,8 @@ def require_login():
                 else:
                     st.error("Password salah. Coba lagi!")
             else:
-                # Murid: password = NPM
                 with st.spinner("Memeriksa data..."):
-                    siswa = cari_siswa(password)
+                    siswa = verifikasi_login(npm_input, password)
                 if siswa:
                     st.session_state["logged_in"] = True
                     st.session_state["user"] = "Murid"
@@ -511,14 +503,15 @@ def require_login():
                     st.session_state["npm"] = str(siswa["NPM"])
                     st.session_state["nama"] = siswa["Nama"]
                     st.session_state["kelas"] = siswa["Kelas"]
+                    st.session_state["pw_default"] = siswa["default"]
                     st.toast(f"Halo, {siswa['Nama']}! Semangat ya 🚀")
                     st.rerun()
                 else:
-                    st.error("NPM tidak ditemukan. Coba lagi!")
+                    st.error("NPM atau password salah. Coba lagi!")
 
     st.markdown("""
     <p style="text-align:center;color:#8B95B0;font-size:12px;margin-top:1.5rem;font-family:'Plus Jakarta Sans',sans-serif;">
-        FlashCard · Kelompok 2 
+        MyTask · Kelompok 2 
     </p>
     """, unsafe_allow_html=True)
 

@@ -61,6 +61,11 @@ def dialog_edit_siswa(nama_kelas, item):
                 st.session_state.pop(f"tabel_{nama_kelas}", None)
                 st.toast("Data siswa berhasil diedit!")
                 st.rerun()
+    if st.button("🔑 Reset password ke NPM", key=f"reset_{nama_kelas}", width="stretch"):
+        if ganti_password(npm_lama, ""):
+            st.toast("Password direset ke NPM!")
+        else:
+            st.error("Siswa tidak ditemukan di sheet!")
 
     st.divider()
 
@@ -79,11 +84,9 @@ if not daftar_kelas:
     st.stop()
 
 # ── Ringkasan atas ──
-m1, m2, m3 = st.columns(3)
+m1, m2 = st.columns(2)
 m1.metric("Total Siswa", len(siswa))
 m2.metric("Total Kelas", len(daftar_kelas))
-rata = len(siswa) / len(daftar_kelas) if daftar_kelas else 0
-m3.metric("Rata-rata / Kelas", f"{rata:.1f}")
 
 tabs = st.tabs([f"🏫 {k}" for k in daftar_kelas])
 
@@ -149,16 +152,6 @@ for nama_kelas, tab in zip(daftar_kelas, tabs):
 
             if st.button("➕ Tambah Siswa", key=f"tambah_{nama_kelas}", width="stretch"):
                 dialog_tambah_siswa(nama_kelas)
-
-            st.download_button(
-                "⬇️ Unduh CSV",
-                data=tampil.to_csv(index=False).encode("utf-8"),
-                file_name=f"siswa_{nama_kelas}.csv",
-                mime="text/csv",
-                key=f"csv_{nama_kelas}",
-                width="stretch",
-                disabled=tampil.empty,
-            )
 
             if pilihan.selection.rows:
                 idx = pilihan.selection.rows[0]

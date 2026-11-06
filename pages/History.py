@@ -62,13 +62,6 @@ def tampil_history(df, key, kosong):
     unduh = tampil.copy()
     tampil["Aksi"] = tampil["Aksi"].map(IKON).fillna(tampil["Aksi"])
     st.dataframe(tampil, hide_index=True, width="stretch")
-    st.download_button(
-        "⬇️ Unduh CSV",
-        data=unduh.to_csv(index=False).encode("utf-8"),
-        file_name=f"history_{key}.csv",
-        mime="text/csv",
-        key=f"csv_{key}",
-    )
 
 
 jumlah = st.slider("Jumlah data ditampilkan", min_value=5, max_value=30, value=10)

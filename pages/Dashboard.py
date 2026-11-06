@@ -18,7 +18,6 @@ tugas = ambil_tugas()
 siswa = ambil_siswa()
 
 
-# ── Helper ──
 def now_wib():
     return datetime.now(ZoneInfo("Asia/Jakarta")).replace(tzinfo=None)
 

@@ -202,20 +202,11 @@ if role == "admin":
 
         with crud_tugas:
             st.write(f"Menampilkan **{len(tampil)}** tugas")
-            st.download_button(
-                "⬇️ Unduh CSV",
-                data=tampil.drop(columns=["_dl"]).to_csv(index=False).encode("utf-8"),
-                file_name="daftar_tugas.csv",
-                mime="text/csv",
-                width="stretch",
-                disabled=tampil.empty,
-            )
 
             if table_edit_tugas.selection.rows:
                 i = table_edit_tugas.selection.rows[0]
                 if i < len(tampil):
                     item = tampil.iloc[i]
-                    st.divider()
                     with st.container(border=True):
                         st.caption("Tugas terpilih")
                         st.markdown(f"**{item['Judul']}**")
@@ -317,13 +308,6 @@ if role == "admin":
                     },
                     hide_index=True,
                     width="stretch"
-                )
-                st.download_button(
-                    "⬇️ Unduh rekap CSV",
-                    data=data_tabel.to_csv(index=False).encode("utf-8"),
-                    file_name=f"monitoring_{pilihan_tugas}.csv",
-                    mime="text/csv",
-                    disabled=data_tabel.empty,
                 )
 
     # ── Tab Tambah Tugas ──

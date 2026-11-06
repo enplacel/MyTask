@@ -3,6 +3,9 @@ import gspread
 import pandas as pd
 from datetime import datetime
 from zoneinfo import ZoneInfo
+import hashlib
+import hmac
+import secrets as _secrets
 
 TTL = 30  # detik
 
@@ -161,21 +164,54 @@ def ambil_siswa():
   return pd.DataFrame(data_siswa, columns=kolom_siswa)
 
 
-def cari_siswa(npm):
-  """Login murid: selalu baca data terbaru (tanpa cache)."""
+# Password Siswa
+def _hash_pw(pw, salt=None):
+  salt = salt or _secrets.token_hex(8)
+  h = hashlib.pbkdf2_hmac("sha256", pw.encode(), salt.encode(), 120_000).hex()
+  return f"{salt}${h}"
+
+def _cek_pw(pw, tersimpan):
+  try:
+    salt, h = tersimpan.split("$")
+  except ValueError:
+    return False
+  return hmac.compare_digest(_hash_pw(pw, salt).split("$")[1], h)
+
+def verifikasi_login(npm, password):
+  """Login murid. Return dict siswa kalau cocok, None kalau salah."""
   npm = str(npm).strip()
-  if not npm:
+  if not npm or not password:
     return None
 
   data = _records(sheet_siswa)
-  siswa = pd.DataFrame(data, columns=["NPM", "Nama", "Kelas"])
-  siswa["NPM"] = siswa["NPM"].astype(str).str.strip()
-  hasil = siswa[siswa["NPM"] == npm]
-
+  df = pd.DataFrame(data, columns=["NPM", "Nama", "Kelas", "Password"]).fillna("")
+  df["NPM"] = df["NPM"].astype(str).str.strip()
+  hasil = df[df["NPM"] == npm]
   if hasil.empty:
     return None
-  return hasil.iloc[0].to_dict()
 
+  row = hasil.iloc[0].to_dict()
+  tersimpan = str(row.pop("Password")).strip()
+
+  if tersimpan:
+    ok = _cek_pw(password, tersimpan)
+  else:
+    ok = password.strip() == npm  # belum pernah ganti → password = NPM
+
+  if not ok:
+    return None
+  row["default"] = not tersimpan
+  return row
+
+def ganti_password(npm, password_baru):
+  """password_baru="" berarti reset ke default (NPM)."""
+  try:
+    baris = sheet_siswa.col_values(1).index(str(npm)) + 1
+  except ValueError:
+    return False
+  nilai = _hash_pw(password_baru) if password_baru else ""
+  sheet_siswa.update(range_name=f"D{baris}", values=[[nilai]], value_input_option="RAW")
+  return True
 
 def tambah_siswa(npm, nama, kelas):
   npm = str(npm)
